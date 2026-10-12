@@ -2,11 +2,13 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from gazebo_msgs.msg import ModelStates
+from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String
 import random
 import math
 import time  # <-- Moved to the top for clean Python practice
+
+from lpl_demo import model_states
 
 class ActorDirector(Node):
     def __init__(self):
@@ -18,7 +20,7 @@ class ActorDirector(Node):
         self.Y_LIMIT_MAX = 3.0   # Left side of road edge
         
         self.pub_vel = self.create_publisher(Twist, '/actor_cmd_vel', 10)
-        self.sub_state = self.create_subscription(ModelStates, '/gazebo/model_states', self.state_callback, 10)
+        self.sub_state = self.create_subscription(TFMessage, model_states.MODEL_STATES_TOPIC, self.state_callback, 10)
         
         # --- FIXED TOPIC --- 
         # This now exactly matches what the dashboard publishes!
@@ -36,7 +38,8 @@ class ActorDirector(Node):
         self.timer = self.create_timer(0.1, self.control_loop) 
         self.get_logger().info("ACTOR: READY (Random Target Walker)")
 
-    def state_callback(self, msg):
+    def state_callback(self, tf_msg):
+        msg = model_states.from_tf(tf_msg)
         try:
             if self.OBSTACLE_NAME in msg.name:
                 idx = msg.name.index(self.OBSTACLE_NAME)

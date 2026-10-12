@@ -1,14 +1,21 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <world name="industrial_corridor">
-    <include>
-      <uri>model://sun</uri>
-    </include>
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
     
-    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
-      <ros><namespace>/gazebo</namespace></ros>
-      <update_rate>50.0</update_rate>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
     </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
 
     <model name="floor">
       <static>true</static>
@@ -18,12 +25,7 @@
         </collision>
         <visual name="visual">
           <geometry><plane><normal>0 0 1</normal><size>30 10</size></plane></geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
-            </script>
-          </material>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
         </visual>
       </link>
     </model>
@@ -35,9 +37,7 @@
         <collision name="collision"><geometry><box><size>25.0 0.2 2.0</size></box></geometry></collision>
         <visual name="visual">
           <geometry><box><size>25.0 0.2 2.0</size></box></geometry>
-          <material>
-            <script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Bricks</name></script>
-          </material>
+          <material><ambient>0.6 0.3 0.2 1</ambient><diffuse>0.6 0.3 0.2 1</diffuse></material>
         </visual>
       </link>
     </model>
@@ -49,9 +49,7 @@
         <collision name="collision"><geometry><box><size>25.0 0.2 2.0</size></box></geometry></collision>
         <visual name="visual">
           <geometry><box><size>25.0 0.2 2.0</size></box></geometry>
-          <material>
-            <script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Bricks</name></script>
-          </material>
+          <material><ambient>0.6 0.3 0.2 1</ambient><diffuse>0.6 0.3 0.2 1</diffuse></material>
         </visual>
       </link>
     </model>
@@ -63,9 +61,7 @@
         <collision name='collision'><geometry><box><size>0.6 0.8 0.8</size></box></geometry></collision>
         <visual name='visual'>
           <geometry><box><size>0.6 0.8 0.8</size></box></geometry>
-          <material>
-            <script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Yellow</name></script>
-          </material>
+          <material><ambient>1 1 0 1</ambient><diffuse>1 1 0 1</diffuse></material>
         </visual>
       </link>
     </model>
@@ -81,22 +77,10 @@
         <collision name='collision'><geometry><box><size>0.6 0.6 0.6</size></box></geometry></collision>
         <visual name='visual'>
           <geometry><box><size>0.6 0.6 0.6</size></box></geometry>
-          <material>
-            <script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/RedBright</name></script>
-          </material>
+          <material><ambient>1 0.1 0.1 1</ambient><diffuse>1 0.1 0.1 1</diffuse></material>
         </visual>
       </link>
-      <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
-        <ros>
-          <argument>cmd_vel:=actor_cmd_vel</argument>
-          <argument>odom:=actor_odom</argument>
-        </ros>
-        <command_topic>actor_cmd_vel</command_topic>
-        <odometry_topic>actor_odom</odometry_topic>
-        <odometry_frame>odom</odometry_frame>
-        <odometry_rate>20.0</odometry_rate>
-        <robot_base_frame>link</robot_base_frame>
-      </plugin>
+      <plugin filename="gz-sim-velocity-control-system" name="gz::sim::systems::VelocityControl"/>
     </model>
 
 
@@ -106,13 +90,9 @@
       <link name='link'>
         <inertial><mass>1.0</mass><inertia><ixx>0.1</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.1</iyy><iyz>0</iyz><izz>0.1</izz></inertia></inertial>
         <collision name='collision'><geometry><box><size>0.6 0.6 0.6</size></box></geometry></collision>
-        <visual name='visual'><geometry><box><size>0.6 0.6 0.6</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Blue</name></script></material></visual>
+        <visual name='visual'><geometry><box><size>0.6 0.6 0.6</size></box></geometry><material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material></visual>
       </link>
-      <plugin name="blue_controller" filename="libgazebo_ros_planar_move.so">
-        <ros><argument>cmd_vel:=blue_cmd_vel</argument><argument>odom:=blue_odom</argument></ros>
-        <command_topic>blue_cmd_vel</command_topic><odometry_topic>blue_odom</odometry_topic>
-        <odometry_frame>odom</odometry_frame><odometry_rate>20.0</odometry_rate><robot_base_frame>link</robot_base_frame>
-      </plugin>
+      <plugin filename="gz-sim-velocity-control-system" name="gz::sim::systems::VelocityControl"/>
     </model>
   </world>
 </sdf>

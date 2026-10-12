@@ -1396,12 +1396,14 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
-from gazebo_msgs.msg import ModelStates
+from geometry_msgs.msg import Twist, TwistStamped
+from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String, Empty, Bool
 import json
 import math
 import time
+
+from lpl_demo import model_states
 
 class LPLNavGuard(Node):
     def __init__(self):
@@ -1428,13 +1430,16 @@ class LPLNavGuard(Node):
         self.last_time = time.time()
         self.last_teleop_time = 0.0 
 
-        self.sub_nav = self.create_subscription(Twist, '/cmd_vel_nav', self.nav_callback, 10)
+        # Autonomy commands (lpl_nav2_demo, or Nav2 via lpl_nav2.launch.py), TwistStamped on Jazzy.
+        # Not /cmd_vel_nav: Nav2 on Jazzy uses that name internally for the raw controller output.
+        self.sub_nav = self.create_subscription(TwistStamped, '/cmd_vel_auto', self.nav_callback, 10)
         self.sub_teleop = self.create_subscription(Twist, '/cmd_vel_input', self.teleop_callback, 10)
-        self.sub_models = self.create_subscription(ModelStates, '/gazebo/model_states', self.perception_callback, 10)
+        self.sub_models = self.create_subscription(TFMessage, model_states.MODEL_STATES_TOPIC, self.perception_callback, 10)
         self.sub_lpl_mode = self.create_subscription(Bool, '/lpl/activation', self.lpl_mode_callback, 10)
         self.sub_auth = self.create_subscription(Empty, '/lpl/authorize', self.auth_callback, 10)
         
-        self.pub_cmd = self.create_publisher(Twist, '/cmd_vel', 10)
+        # TurtleBot3 on Jazzy takes TwistStamped on /cmd_vel
+        self.pub_cmd = self.create_publisher(TwistStamped, '/cmd_vel', 10)
         self.pub_status = self.create_publisher(String, '/lpl/status', 10)
 
     def lpl_mode_callback(self, msg):
@@ -1450,7 +1455,7 @@ class LPLNavGuard(Node):
     def teleop_callback(self, msg):
         self.last_teleop_time = time.time()  
         if (self.manual_lockout or not self.lpl_active) and not self.crashed:
-            self.pub_cmd.publish(msg)
+            self.publish_cmd(msg)
 
     def apply_smoothing(self, dt):
         # If we are recovering from a Blue Box, fill the bar slower (takes ~1.3 seconds)
@@ -1465,7 +1470,8 @@ class LPLNavGuard(Node):
         else:
             self.current_confidence += math.copysign(rate_of_change, diff)
 
-    def perception_callback(self, msg):
+    def perception_callback(self, tf_msg):
+        msg = model_states.from_tf(tf_msg)
         try:
             if 'turtlebot3_waffle_pi' not in msg.name: return
             rob_idx = msg.name.index('turtlebot3_waffle_pi')
@@ -1594,29 +1600,37 @@ class LPLNavGuard(Node):
 
         except Exception: pass
 
-    def nav_callback(self, msg):
+    def nav_callback(self, stamped_msg):
+        msg = stamped_msg.twist
         if self.crashed:
-            self.pub_cmd.publish(Twist())
+            self.publish_cmd(Twist())
             return
 
         if not self.lpl_active:
-            self.pub_cmd.publish(msg)
+            self.publish_cmd(msg)
             return
 
         # NEW: If we are rebuilding confidence, force the robot to stay stopped!
         if self.recovering_confidence:
-            self.pub_cmd.publish(Twist())
+            self.publish_cmd(Twist())
             return
 
         if self.manual_lockout:
             if time.time() - self.last_teleop_time > 0.2:
-                self.pub_cmd.publish(Twist()) 
+                self.publish_cmd(Twist()) 
             return 
         else:
             final_cmd = Twist()
             final_cmd.linear.x = msg.linear.x * self.current_confidence
             final_cmd.angular.z = msg.angular.z * self.current_confidence
-            self.pub_cmd.publish(final_cmd)
+            self.publish_cmd(final_cmd)
+
+    def publish_cmd(self, twist):
+        stamped = TwistStamped()
+        stamped.header.stamp = self.get_clock().now().to_msg()
+        stamped.header.frame_id = 'base_link'
+        stamped.twist = twist
+        self.pub_cmd.publish(stamped)
 
     def publish_status(self, state, obs_name):
         status = {

@@ -20,12 +20,14 @@ setup(
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.world')),
         # URDF
         (os.path.join('share', package_name, 'urdf'), glob('urdf/*.urdf')),
+        # ros_gz bridge / Nav2 config
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
         # --- ADDED LINES END ---
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='user',
-    maintainer_email='user@todo.todo',
+    maintainer='usama',
+    maintainer_email='usama.humayun1@gmail.com',
     description='LPL Demo Package',
     license='TODO',
     tests_require=['pytest'],
@@ -39,6 +41,7 @@ setup(
             'lpl_manager_gauntlet = lpl_demo.lpl_manager_gauntlet:main',
             'lpl_manager_guard = lpl_demo.lpl_manager_guard:main',
             'lpl_nav2_demo = lpl_demo.lpl_nav2_demo:main',
+            'gz_world_state = lpl_demo.gz_world_state:main',
             
             ],
     },

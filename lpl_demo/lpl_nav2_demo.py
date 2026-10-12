@@ -71,16 +71,18 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
-from gazebo_msgs.msg import ModelStates
+from geometry_msgs.msg import Twist, TwistStamped
+from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Bool
 import math
+
+from lpl_demo import model_states
 
 class DemoPlanner(Node):
     def __init__(self):
         super().__init__('demo_planner')
-        self.pub_cmd = self.create_publisher(Twist, '/cmd_vel_nav', 10)
-        self.sub_state = self.create_subscription(ModelStates, '/gazebo/model_states', self.pose_callback, 10)
+        self.pub_cmd = self.create_publisher(TwistStamped, '/cmd_vel_auto', 10)
+        self.sub_state = self.create_subscription(TFMessage, model_states.MODEL_STATES_TOPIC, self.pose_callback, 10)
         self.sub_lpl = self.create_subscription(Bool, '/lpl/activation', self.lpl_callback, 10)
         
         self.lpl_active = True
@@ -92,7 +94,8 @@ class DemoPlanner(Node):
     def lpl_callback(self, msg):
         self.lpl_active = msg.data
 
-    def pose_callback(self, msg):
+    def pose_callback(self, tf_msg):
+        msg = model_states.from_tf(tf_msg)
         try:
             idx = msg.name.index('turtlebot3_waffle_pi')
             self.robot_x = msg.pose[idx].position.x
@@ -115,7 +118,7 @@ class DemoPlanner(Node):
             target_y = 1.6 if self.lpl_active else 0.6
         elif self.robot_x < 25.0: target_y = 0.0 
         else:
-            self.pub_cmd.publish(Twist())
+            self.send(Twist())
             return
 
         lookahead_x = 1.0
@@ -131,7 +134,15 @@ class DemoPlanner(Node):
         cmd.linear.x = 0.4 if self.lpl_active else 0.9 
         cmd.angular.z = 1.8 * yaw_error
         
-        self.pub_cmd.publish(cmd)
+        self.send(cmd)
+
+    def send(self, twist):
+        # Same message type Nav2 publishes on Jazzy
+        stamped = TwistStamped()
+        stamped.header.stamp = self.get_clock().now().to_msg()
+        stamped.header.frame_id = 'base_link'
+        stamped.twist = twist
+        self.pub_cmd.publish(stamped)
 
 def main(args=None):
     rclpy.init(args=args)
