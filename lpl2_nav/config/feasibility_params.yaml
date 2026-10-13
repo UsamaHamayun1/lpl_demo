@@ -1,0 +1,58 @@
+# Feasibility planner: a second planner_server in namespace /feasibility whose costmap
+# is PHYSICAL ONLY (static map + lidar + inflation, no LPL keepout).
+#
+# It answers "is this option physically possible?" through /feasibility/is_path_valid,
+# independently of authority, so the decision space can show "possible but not
+# authorized" (Option A after P3 is revoked) versus "not possible" (bypass shut).
+
+/feasibility/planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 10.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner::NavfnPlanner"
+      tolerance: 0.3
+      use_astar: false
+      allow_unknown: false
+
+/feasibility/global_costmap/global_costmap:
+  ros__parameters:
+    use_sim_time: true
+    update_frequency: 5.0
+    publish_frequency: 1.0
+    global_frame: map
+    robot_base_frame: base_link
+    transform_tolerance: 0.5
+    resolution: 0.05
+    track_unknown_space: false
+    footprint: "[[-0.205, -0.155], [-0.205, 0.155], [0.077, 0.155], [0.077, -0.155]]"
+    plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+    static_layer:
+      plugin: "nav2_costmap_2d::StaticLayer"
+      map_topic: /map
+      map_subscribe_transient_local: true
+    obstacle_layer:
+      plugin: "nav2_costmap_2d::ObstacleLayer"
+      enabled: true
+      observation_sources: scan
+      scan:
+        topic: /scan
+        data_type: "LaserScan"
+        max_obstacle_height: 2.0
+        clearing: true
+        marking: true
+        raytrace_max_range: 3.5
+        obstacle_max_range: 3.0
+    inflation_layer:
+      plugin: "nav2_costmap_2d::InflationLayer"
+      inflation_radius: 0.45
+      cost_scaling_factor: 4.0
+    always_send_full_costmap: true
+
+/feasibility/lifecycle_manager_feasibility:
+  ros__parameters:
+    use_sim_time: true
+    autostart: true
+    bond_timeout: 4.0
+    node_names: ["planner_server"]

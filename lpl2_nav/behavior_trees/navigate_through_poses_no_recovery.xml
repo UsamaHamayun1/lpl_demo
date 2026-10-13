@@ -1,0 +1,17 @@
+<!--
+  lpl2_nav: through-poses variant (used to drive a predefined route via waypoints).
+  Replan at 2 Hz through the remaining waypoints; no recovery behaviours (see the to-pose tree).
+-->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <PipelineSequence name="NavigateWithReplanning">
+      <RateController hz="2.0">
+        <ReactiveSequence>
+          <RemovePassedGoals input_goals="{goals}" output_goals="{goals}" radius="0.7"/>
+          <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="GridBased" error_code_id="{compute_path_error_code}"/>
+        </ReactiveSequence>
+      </RateController>
+      <FollowPath path="{path}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
+    </PipelineSequence>
+  </BehaviorTree>
+</root>

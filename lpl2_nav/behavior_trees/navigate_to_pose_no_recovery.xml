@@ -1,0 +1,16 @@
+<!--
+  lpl2_nav: replan at 2 Hz, NO recovery behaviours (no costmap clearing, spin or backup).
+  A planner failure (e.g. NO_VALID_PATH = 208 when every allowed route is blocked) fails the
+  tree at once, so NavigateToPose aborts with that error code instead of the robot spinning or
+  "forgetting" an obstacle it saw. Whoever sent the goal decides what happens next.
+-->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <PipelineSequence name="NavigateWithReplanning">
+      <RateController hz="2.0">
+        <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased" error_code_id="{compute_path_error_code}"/>
+      </RateController>
+      <FollowPath path="{path}" controller_id="FollowPath" error_code_id="{follow_path_error_code}"/>
+    </PipelineSequence>
+  </BehaviorTree>
+</root>
