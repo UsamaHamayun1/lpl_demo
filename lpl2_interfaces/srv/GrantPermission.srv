@@ -1,0 +1,13 @@
+# Human operator grants (or revokes) a permission without taking manual control.
+string permission_id             # "P3"
+string for_option                # option the grant is meant for, e.g. "A"
+float32 ttl_s                    # grant expires if unused for this long
+string operator_id
+uint32 authority_revision_seen   # revision the operator was looking at (stale consent is refused)
+bool revoke                      # true = withdraw an active grant
+---
+bool accepted
+string grant_id
+string reason                    # GRANTED, REVOKED, NOT_GRANTABLE, NOT_NEEDED, ALREADY_GRANTED,
+                                 # STALE_CONSENT, CONTRADICTED, NO_ACTIVE_GRANT
+builtin_interfaces/Time expires_at
