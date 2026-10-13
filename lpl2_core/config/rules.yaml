@@ -1,0 +1,46 @@
+# LPL 2.0 authority rules for the corridor demo.
+#
+# The CONTENT of this file is LPL policy (Keyonn's side): which evidence each decision
+# permission needs, whether a human may grant it, and how revocation behaves.
+# The engine (lpl2_core/policy.py) is generic: it knows nothing about lanes, options,
+# routes, costs or the mission.
+
+rules_id: corridor-frozen-v1
+evidence_ttl_default_s: 1.0      # evidence older than its ttl counts as UNKNOWN -> not supported
+heartbeat_hz: 10.0               # full AuthorityState is republished at this rate
+lease_s: 1.0                     # consumers treat an older AuthorityState as "nothing authorized"
+
+permissions:
+  P1:
+    name: Proceed in own lane
+    region: lane2
+    requires: [E1_own_lane_ok]
+    human_grantable: false
+  P2:
+    name: Use service bypass
+    region: bypass
+    requires: [E2_bypass_access_ok]
+    human_grantable: true
+  P3:
+    name: Borrow oncoming lane (passing window)
+    region: lane1_window
+    requires: [E3_lane1_sector_clear]
+    human_grantable: true
+    restore_dwell_s: 1.0         # fast revoke, slow restore: evidence must hold this long before re-grant
+    on_revoke_inside_region: EGRESS   # if lost while the robot is in the region: leaving is the only allowed use
+    grant:
+      max_unused_s: 60.0         # a human grant expires if the robot has not entered the region by then
+      single_pass: true          # consumed when the robot leaves the region again
+      cancel_on_contradiction: true   # CONTRADICTED evidence (e.g. oncoming robot seen) cancels the grant
+
+# How each permission's region becomes a keepout area while the permission is not usable,
+# and which areas are never usable (standing traffic rules). Zone names refer to
+# lpl2_sim/config/corridor.yaml. grow_y_min pushes the area into the neighbouring lane so
+# the robot's body, not just its centre, stays out of the lane.
+constraints:
+  standing_keepout:
+    - {zone: lane1, grow_y_min: 0.35, except_zone: lane1_window}   # no passing outside the window
+  regions:
+    lane1_window: {zone: lane1_window, grow_y_min: 0.35}
+    bypass: {zone: bypass}
+    lane2: {zone: lane2}

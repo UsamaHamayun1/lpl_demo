@@ -1,0 +1,27 @@
+# Scripted evidence for the corridor demo (stand-in for Quang's perception).
+#
+# Keyonn's frozen instruction set allows the evidence change to be scripted. This file
+# says what the evidence layer reports initially and how each WORLD event changes it.
+# It never mentions permissions: lpl2_core/config/rules.yaml maps evidence to permissions.
+
+items:
+  E1_own_lane_ok:
+    proposition: Own lane clear within stopping distance; localization OK
+  E2_bypass_access_ok:
+    proposition: Service bypass free of people and work
+  E3_lane1_sector_clear:
+    proposition: Lane 1 verified clear through the passing sector
+
+initial:
+  E1_own_lane_ok:        {level: ADEQUATE, reason: OK,    detail: Lane 2 clear; localization nominal}
+  E2_bypass_access_ok:   {level: ADEQUATE, reason: FREE,  detail: no people or work reported in the bypass}
+  E3_lane1_sector_clear: {level: ADEQUATE, reason: CLEAR, detail: Lane 1 visible to the end of the sector (x=28.4)}
+
+on_world_event:
+  W1:   # tall stack placed on the pallet
+    E3_lane1_sector_clear:
+      level: INSUFFICIENT
+      reason: OCCLUDED
+      detail: tall stack hides Lane 1 beyond x≈24.8 (need 28.4)
+  # W2 (shutter closes the bypass) changes nothing here on purpose: a closed door is a
+  # physical blockage the robot must discover itself, not a permission question.

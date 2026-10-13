@@ -1,0 +1,17 @@
+# Mission policy (what counts as "adequate" progress). Not LPL rules, not geometry.
+mission_id: M1
+goal: [24.0, -0.6]
+goal_tolerance_m: 0.35
+speed_mps: 0.26            # for ETAs
+max_eta_s: 300.0           # an option slower than this is not adequate
+t_confirm_s: 1.0           # the adequate set must stay empty this long before asking the human
+lease_s: 1.0               # authority older than this counts as missing (nothing authorized)
+selector:
+  hysteresis_s: 2.0        # keep the current option unless another is this much faster
+advisory:
+  enabled: true
+  min_gain_frac: 0.10      # advise only if the better option saves at least 10 % ...
+  min_gain_s: 5.0          # ... and at least 5 s
+feasibility:
+  blocked_after: 2         # consecutive failed checks (2 Hz) before an option counts as blocked
+  clear_after: 6           # consecutive good checks (3 s) before it counts as possible again

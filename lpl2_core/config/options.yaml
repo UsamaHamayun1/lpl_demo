@@ -1,0 +1,37 @@
+# Predefined ways to reach the goal (Keyonn's frozen set allows predefined routes).
+#
+# GEOMETRY ONLY. Which permissions an option needs is derived from where its remaining
+# path goes (the permission regions in rules.yaml), never declared here: the planner
+# does not get to decide which rules apply to it.
+#
+# waypoints: polyline in map coordinates. Segments that change lane (|dy| > 0 with dx > 0)
+#            are drawn as smooth cosine ramps.
+# unreachable_inside: once the robot is in one of these boxes the option can no longer be
+#            taken (commit points).
+options:
+  A:
+    name: Pass through Lane 1
+    waypoints: [[0.0, -0.6], [10.5, -0.6], [12.0, 0.6], [14.8, 0.6], [16.5, -0.6], [24.0, -0.6]]
+    unreachable_inside:
+      - {x: [8.4, 18.8], y: [-4.2, -1.25]}     # entered the bypass door: committed to B
+  B:
+    name: Service bypass
+    waypoints: [[0.0, -0.6], [8.4, -0.6], [9.0, -1.2], [9.0, -2.8], [9.6, -3.4], [17.4, -3.4],
+                [18.0, -2.8], [18.0, -1.2], [18.6, -0.6], [24.0, -0.6]]
+    unreachable_inside:
+      - {x: [9.7, 17.4], y: [-1.2, 1.2]}       # drove past the bypass entry in the corridor (paths rejoin after 17.4)
+  H:
+    name: Hold in own lane
+    hold: true
+
+# Where the robot may stop and wait. If no adequate option remains while the robot is
+# anywhere else (e.g. in Lane 1), it does not stop there: it first returns to the nearest
+# safe-hold point (EGRESS), then holds or asks the human.
+safe_hold:
+  regions: [lane2, bypass]
+  egress_targets:                 # candidate points to return to (own-lane centre line)
+    y: -0.6
+    x_from: 0.5
+    x_to: 24.0
+    step: 0.5
+    exclude_x: [[12.5, 14.5]]     # the pallet blocks Lane 2 here
