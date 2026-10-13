@@ -1,0 +1,5 @@
+name: nominal
+description: >
+  Control run, no disturbance. Low pallet only, Lane 1 empty, bypass open.
+  With P3 available the autonomy should pass the pallet through Lane 1 (Option A).
+events: []

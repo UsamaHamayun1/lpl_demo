@@ -1,0 +1,17 @@
+name: lpl3_handover
+description: >
+  Frozen step 7. As lpl1_continue, then at x=6 a shutter closes the bypass entry.
+  Option A is not authorized (no P3), Option B is physically blocked, holding makes no
+  progress: no adequate permitted option remains -> HUMAN JUDGMENT REQUIRED.
+events:
+  - id: W1
+    note: Tall stack placed on the pallet (view down Lane 1 lost); Robot 2 released
+    when: {robot_x_ge: 3.0}
+    do:
+      - {show: obstacle_tall}
+      - {robot2: release}
+  - id: W2
+    note: Shutter closes the bypass entry (Option B physically blocked)
+    when: {robot_x_ge: 6.0}
+    do:
+      - {show: bypass_shutter}

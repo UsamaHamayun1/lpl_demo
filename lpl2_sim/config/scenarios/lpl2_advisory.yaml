@@ -1,0 +1,11 @@
+name: lpl2_advisory
+description: >
+  Advisory branch. Same occlusion as lpl1_continue, but Lane 1 stays empty (no Robot 2),
+  so the operator, who sees the top-down view, can authorize P3 (Space) and R takes Option A
+  autonomously. If the operator does nothing, R continues on Option B.
+events:
+  - id: W1
+    note: Tall stack placed on the pallet (view down Lane 1 lost); Lane 1 actually empty
+    when: {robot_x_ge: 3.0}
+    do:
+      - {show: obstacle_tall}

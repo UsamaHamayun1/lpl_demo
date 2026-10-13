@@ -1,0 +1,12 @@
+name: lpl1_continue
+description: >
+  Frozen steps 1-6. When R reaches x=3 a tall stack is placed on the pallet, hiding Lane 1,
+  and Robot 2 is released into Lane 1 out of R's sight. Evidence for P3 becomes insufficient;
+  R is expected to keep its mission and continue through the bypass (Option B), no human.
+events:
+  - id: W1
+    note: Tall stack placed on the pallet (view down Lane 1 lost); Robot 2 released
+    when: {robot_x_ge: 3.0}
+    do:
+      - {show: obstacle_tall}
+      - {robot2: release}
